@@ -31,7 +31,7 @@ val UNIQUE_ID_KEY = "spinnaker:stats:instanceId"
 @ConditionalOnProperty(value = ["stats.enabled"], matchIfMissing = true)
 class InstanceIdSupplier(
   private val config: TelemetryConfig.TelemetryConfigProps,
-  redisSelector: RedisClientSelector?
+  redisSelector: RedisClientSelector?,
 ) {
   private val log: Logger = LoggerFactory.getLogger(this.javaClass)
   private val redis = try { redisSelector?.primary("default") } catch (e: RedisClientNotFound) { null }

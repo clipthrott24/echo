@@ -18,9 +18,9 @@
 package com.netflix.spinnaker.echo.telemetry
 
 import com.google.common.hash.Hashing
+import java.nio.charset.StandardCharsets
 import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
-import java.nio.charset.StandardCharsets
 
 /**
  * A hook to add data to the community statistics.

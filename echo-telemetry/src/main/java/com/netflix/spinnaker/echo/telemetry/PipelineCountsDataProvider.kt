@@ -18,13 +18,13 @@
 package com.netflix.spinnaker.echo.telemetry
 
 import com.google.common.base.Suppliers
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.services.Front50Service
 import com.netflix.spinnaker.security.AuthenticatedRequest
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
-import java.util.concurrent.TimeUnit
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 @Component
 @ConditionalOnProperty(value = ["stats.enabled"], matchIfMissing = true)
@@ -34,7 +34,6 @@ class PipelineCountsDataProvider(private val front50: Front50Service) : Telemetr
     Suppliers.memoizeWithExpiration({ retrievePipelines() }, 30, TimeUnit.MINUTES)
 
   override fun populateData(echoEvent: EchoEvent, statsEvent: StatsEvent): StatsEvent {
-
     val newEvent = statsEvent.toBuilder()
     val appPipelines = appPipelinesSupplier.get()
     val appPipelineCount = appPipelines[echoEvent.details.application]

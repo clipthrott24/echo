@@ -126,7 +126,7 @@ class ManualJudgmentTemplateTest extends Specification {
       ```
       This test was added was because code blocks in Slack would word wrap at 80 characters and inject newlines in codeblocks. Note the extra whitespaces after each original newline.
       ```
-      '''.stripIndent()
+      '''.stripIndent(6)
 
     when:
     def rendered = notificationTemplateEngine.build(notif, NotificationTemplateEngine.Type.BODY)
@@ -145,6 +145,6 @@ class ManualJudgmentTemplateTest extends Specification {
         This is an example message from spinnaker that's more than 80 characters to make sure that we won't wrap it. Note the extra whitespace at the end here: 
 
          ``` This test was added was because code blocks in Slack would word wrap at 80 characters and inject newlines in codeblocks. Note the extra whitespaces after each original newline. ``` 
-        '''.stripIndent()
+        '''.stripIndent(8)
   }
 }
