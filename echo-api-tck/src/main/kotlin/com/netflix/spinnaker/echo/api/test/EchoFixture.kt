@@ -35,7 +35,7 @@ abstract class EchoFixture
  * DSL for constructing an EchoFixture within a Minutest suite.
  */
 inline fun <PF, reified F> TestContextBuilder<PF, F>.echoFixture(
-  crossinline factory: (Unit).(testDescriptor: TestDescriptor) -> F
+  crossinline factory: (Unit).(testDescriptor: TestDescriptor) -> F,
 ) {
   fixture { testDescriptor ->
     factory(testDescriptor).also {

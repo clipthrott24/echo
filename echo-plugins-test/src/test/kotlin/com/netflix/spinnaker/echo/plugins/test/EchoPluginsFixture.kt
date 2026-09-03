@@ -23,7 +23,6 @@ import com.netflix.spinnaker.echo.plugins.NotificationAgentExtension
 import com.netflix.spinnaker.kork.plugins.SpinnakerPluginManager
 import com.netflix.spinnaker.kork.plugins.internal.PluginJar
 import com.netflix.spinnaker.kork.plugins.tck.PluginsTckFixture
-import java.io.File
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -31,6 +30,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.ApplicationContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
+import java.io.File
 
 class EchoPluginsFixture : PluginsTckFixture, EchoTestService() {
 
@@ -42,7 +42,7 @@ class EchoPluginsFixture : PluginsTckFixture, EchoTestService() {
 
   override val extensionClassNames: MutableList<String> = mutableListOf(
     EventListenerExtension::class.java.name,
-    NotificationAgentExtension::class.java.name
+    NotificationAgentExtension::class.java.name,
   )
 
   final override fun buildPlugin(pluginId: String, systemVersionRequirement: String): PluginJar {

@@ -16,3 +16,7 @@ resilience4j.circuitbreaker:
 spring:
   application:
     name: echoTest
+
+services:
+  fiat:
+    baseUrl: 'http://localhost:7003'

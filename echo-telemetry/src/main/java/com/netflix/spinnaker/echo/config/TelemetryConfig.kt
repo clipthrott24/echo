@@ -21,7 +21,6 @@ import com.netflix.spinnaker.retrofit.RetrofitConfigurationProperties
 import com.netflix.spinnaker.retrofit.Slf4jRetrofitLogger
 import com.squareup.okhttp.OkHttpClient
 import de.huxhorn.sulky.ulid.ULID
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -31,6 +30,7 @@ import org.springframework.context.annotation.Configuration
 import retrofit.RestAdapter
 import retrofit.client.OkClient
 import retrofit.converter.JacksonConverter
+import java.util.concurrent.TimeUnit
 
 @Configuration
 @ConditionalOnProperty(value = ["stats.enabled"], matchIfMissing = true)
@@ -44,7 +44,7 @@ open class TelemetryConfig {
   @Bean
   open fun telemetryService(
     retrofitConfigurationProperties: RetrofitConfigurationProperties,
-    configProps: TelemetryConfigProps
+    configProps: TelemetryConfigProps,
   ): TelemetryService {
     log.info("Telemetry service loaded")
     return RestAdapter.Builder()
