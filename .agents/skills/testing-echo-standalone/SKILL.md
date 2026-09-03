@@ -42,6 +42,11 @@ management:
   endpoint: {health: {show-details: always}, env: {enabled: true}}
 ```
 
+`exposure.include: "*"` plus `env` is what makes `/env/java.version` and detailed `/health`
+probe-able, but it serves every property (including any credential Echo inherited) unauthenticated.
+It is only safe because `server.address` pins the listener to `127.0.0.1` — keep that binding, keep
+the file under your own `~/.spinnaker/`, and never carry this config to a shared or deployed host.
+
 Launch:
 
 ```bash
@@ -56,11 +61,41 @@ The Spring context starts fine with **no** Redis, SQL, Orca, Front50 or Fiat run
 
 `PipelineCache` (`MonitoredPoller`) polls Front50 `/pipelines?restricted=false` every 30 s and
 drives the `monitoredPollerHealth` indicator. Without Front50, `/health` is **503 / DOWN** even
-though the app is healthy. Run a 20-line stub so the health assertion is meaningful:
+though the app is healthy. Run this stub so the health assertion is meaningful:
 
 ```python
-# front50_stub.py -> serve on 127.0.0.1:8080, return [] with Content-Type: application/json for any GET
+# front50_stub.py
+import json
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class Front50Stub(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = json.dumps([]).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+HTTPServer(("127.0.0.1", 8080), Front50Stub).serve_forever()
 ```
+
+```bash
+setsid python3 front50_stub.py > /tmp/front50_stub.log 2>&1 < /dev/null &
+FRONT50_PID=$!
+curl -sS 'http://127.0.0.1:8080/pipelines?restricted=false'   # -> []
+# when done:
+kill "$FRONT50_PID"
+```
+
+`setsid` matters: a plain `&` job is killed when the tool's shell session ends, and the stub then
+disappears mid-verification. If `$FRONT50_PID` is lost, find it by port, not by name:
+`ss -ltnp | grep ':8080'`.
 
 Within ~30 s `/health` flips to `{"status":"UP", ... "monitoredPollerHealth":{"status":"UP"}}`.
 
@@ -86,12 +121,16 @@ Spring Boot 2.7.x still ships `logback-classic` 1.2.x (which only provides the s
 ls echo-web/build/install/echo/lib/ | grep -E 'slf4j-api|logback-classic'
 ```
 
-Real fix belongs in the build — add a strict constraint in the root `build.gradle`, which is
-the approach that was verified to work on this repo:
+Real fix belongs in the build — add a strict constraint to the `constraints { }` block that already
+lives inside `subprojects { ... dependencies { ... } }` in the root `build.gradle` (this is what is
+on master today; a bare top-level `constraints { }` is not a valid root-script method and breaks
+configuration for every task):
 
 ```groovy
-constraints {
-  implementation("org.slf4j:slf4j-api") { version { strictly "1.7.36" } }
+implementation("org.slf4j:slf4j-api") {
+  version {
+    strictly "1.7.36"
+  }
 }
 ```
 
@@ -139,8 +178,18 @@ Negative control that proves the bytecode level is real:
   be configured — do not dismantle it.
 - Comparing dependency resolution against an older commit: `git worktree` breaks the Gradle
   `.git/hooks` lookup. Use `git archive <sha> | tar -x -C /tmp/<dir>` instead.
-- `pkill -f 'com.netflix.spinnaker.echo.Application'` can match and kill the tool's own shell.
-  Prefer `kill $(pgrep -f 'install/echo/bin/echo')` or an explicit PID.
+- Shutting Echo down: capture the PID at launch and use it. `bin/echo` `exec`s the JVM, so the
+  shell PID *is* the JVM PID:
+  ```bash
+  setsid ./echo-web/build/install/echo/bin/echo > /tmp/echo.log 2>&1 < /dev/null &
+  ECHO_PID=$!
+  kill "$ECHO_PID"
+  ```
+  Do not match on the launcher path — after `exec` the command line is `java ... -classpath ...
+  com.netflix.spinnaker.echo.Application`, so `pgrep -f 'install/echo/bin/echo'` finds nothing and
+  leaves Echo holding the port. If the PID is lost, resolve it from the port
+  (`ss -ltnp | grep ':8089'`) rather than from a name pattern, and never `pkill -f
+  'com.netflix.spinnaker.echo.Application'` — that pattern also matches the tool's own shell.
 - **Always confirm port 8089 is free before booting.** A leftover Echo from an earlier run makes
   the new boot die with `APPLICATION FAILED TO START / Port 8089 was already in use`, which is
   easily misread as a regression. Check and clean up with:
