@@ -17,10 +17,8 @@
 
 package com.netflix.spinnaker.echo.telemetry
 
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.api.events.Metadata
 import com.netflix.spinnaker.kork.proto.stats.CloudProvider
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import com.netflix.spinnaker.kork.proto.stats.Execution
 import com.netflix.spinnaker.kork.proto.stats.Status
 import org.junit.Assume.assumeTrue
@@ -33,15 +31,17 @@ import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotEqualTo
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 class ExecutionDataProviderTest {
 
   @Test
   fun `no execution data`() {
-
     val echoEvent = createLoggableEvent()
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.id).isEmpty()
@@ -53,14 +53,14 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `execution id is hashed`() {
-
     val executionData = mapOf(
-      "id" to "myExecutionId"
+      "id" to "myExecutionId",
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.id).isNotEmpty()
@@ -69,14 +69,14 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `pipeline execution type`() {
-
     val executionData = mapOf(
-      "type" to "pipeline"
+      "type" to "pipeline",
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.type).isEqualTo(Execution.Type.PIPELINE)
@@ -84,14 +84,14 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `orchestration execution type`() {
-
     val executionData = mapOf(
-      "type" to "orchestration"
+      "type" to "orchestration",
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.type).isEqualTo(Execution.Type.ORCHESTRATION)
@@ -99,14 +99,14 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `templatedPipeline execution type with no version`() {
-
     val executionData = mapOf(
-      "type" to "templatedPipeline"
+      "type" to "templatedPipeline",
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.type).isEqualTo(Execution.Type.UNKNOWN)
@@ -114,18 +114,18 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `templatedPipeline v1 execution type`() {
-
     val executionData = mapOf(
       "type" to "orchestration", // this should be ignored
       "source" to mapOf(
         "type" to "templatedPipeline",
-        "version" to "v1"
-      )
+        "version" to "v1",
+      ),
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.type).isEqualTo(Execution.Type.MANAGED_PIPELINE_TEMPLATE_V1)
@@ -133,18 +133,18 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `templatedPipeline v2 execution type`() {
-
     val executionData = mapOf(
       "type" to "orchestration", // this should be ignored
       "source" to mapOf(
         "type" to "templatedPipeline",
-        "version" to "v2"
-      )
+        "version" to "v2",
+      ),
     )
     val echoEvent = createEventWithExecutionData(executionData)
 
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.type).isEqualTo(Execution.Type.MANAGED_PIPELINE_TEMPLATE_V2)
@@ -153,15 +153,15 @@ class ExecutionDataProviderTest {
   @ParameterizedTest
   @EnumSource
   fun `execution statuses`(status: Status) {
-
     assumeTrue(status != Status.UNRECOGNIZED)
 
     val executionData = mapOf(
-      "status" to status.toString()
+      "status" to status.toString(),
     )
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.status).isEqualTo(status)
@@ -170,17 +170,17 @@ class ExecutionDataProviderTest {
   @ParameterizedTest
   @EnumSource
   fun `trigger types`(triggerType: Execution.Trigger.Type) {
-
     assumeTrue(triggerType != Execution.Trigger.Type.UNRECOGNIZED)
 
     val executionData = mapOf(
       "trigger" to mapOf(
-        "type" to triggerType.toString()
-      )
+        "type" to triggerType.toString(),
+      ),
     )
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.trigger.type).isEqualTo(triggerType)
@@ -188,22 +188,22 @@ class ExecutionDataProviderTest {
 
   @Test
   fun `basic stage`() {
-
     val executionData = mapOf(
       "stages" to listOf(
         mapOf(
           "status" to "buffered",
           "type" to "myStageType",
           "context" to mapOf(
-            "cloudProvider" to "gce"
-          )
-        )
-      )
+            "cloudProvider" to "gce",
+          ),
+        ),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(1)
@@ -211,42 +211,42 @@ class ExecutionDataProviderTest {
     expectThat(stage.status).isEqualTo(Status.BUFFERED)
     expectThat(stage.type).isEqualTo("myStageType")
     expectThat(stage.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build(),
     )
   }
 
   @Test
   fun `multiple stages`() {
-
     val executionData = mapOf(
       "stages" to listOf(
         mapOf(
           "status" to "buffered",
           "type" to "myStageType1",
           "context" to mapOf(
-            "cloudProvider" to "gce"
-          )
+            "cloudProvider" to "gce",
+          ),
         ),
         mapOf(
           "status" to "redirect",
           "type" to "myStageType2",
           "context" to mapOf(
-            "cloudProvider" to "aws"
-          )
+            "cloudProvider" to "aws",
+          ),
         ),
         mapOf(
           "status" to "paused",
           "type" to "myStageType3",
           "context" to mapOf(
-            "cloudProvider" to "AppEngine"
-          )
-        )
-      )
+            "cloudProvider" to "AppEngine",
+          ),
+        ),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(3)
@@ -255,27 +255,26 @@ class ExecutionDataProviderTest {
     expectThat(stage1.status).isEqualTo(Status.BUFFERED)
     expectThat(stage1.type).isEqualTo("myStageType1")
     expectThat(stage1.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build(),
     )
 
     val stage2 = statsEvent.execution.stagesList[1]
     expectThat(stage2.status).isEqualTo(Status.REDIRECT)
     expectThat(stage2.type).isEqualTo("myStageType2")
     expectThat(stage2.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.AWS).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.AWS).build(),
     )
 
     val stage3 = statsEvent.execution.stagesList[2]
     expectThat(stage3.status).isEqualTo(Status.PAUSED)
     expectThat(stage3.type).isEqualTo("myStageType3")
     expectThat(stage3.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.APPENGINE).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.APPENGINE).build(),
     )
   }
 
   @Test
   fun `split stages with multiple cloud providers`() {
-
     val executionData = mapOf(
       "stages" to listOf(
         mapOf(
@@ -283,16 +282,17 @@ class ExecutionDataProviderTest {
           "type" to "myStageType",
           "context" to mapOf(
             "newState" to mapOf(
-              "cloudProviders" to "gce,aws,appengine"
-            )
-          )
-        )
-      )
+              "cloudProviders" to "gce,aws,appengine",
+            ),
+          ),
+        ),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(3)
@@ -301,39 +301,39 @@ class ExecutionDataProviderTest {
     expectThat(stage1.status).isEqualTo(Status.BUFFERED)
     expectThat(stage1.type).isEqualTo("myStageType")
     expectThat(stage1.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.GCE).build(),
     )
 
     val stage2 = statsEvent.execution.stagesList[1]
     expectThat(stage2.status).isEqualTo(Status.BUFFERED)
     expectThat(stage2.type).isEqualTo("myStageType")
     expectThat(stage2.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.AWS).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.AWS).build(),
     )
 
     val stage3 = statsEvent.execution.stagesList[2]
     expectThat(stage3.status).isEqualTo(Status.BUFFERED)
     expectThat(stage3.type).isEqualTo("myStageType")
     expectThat(stage3.cloudProvider).isEqualTo(
-      CloudProvider.newBuilder().setId(CloudProvider.ID.APPENGINE).build()
+      CloudProvider.newBuilder().setId(CloudProvider.ID.APPENGINE).build(),
     )
   }
 
   @Test
   fun `stage with no cloud provider`() {
-
     val executionData = mapOf(
       "stages" to listOf(
         mapOf(
           "status" to "buffered",
-          "type" to "myStageType"
-        )
-      )
+          "type" to "myStageType",
+        ),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(1)
@@ -344,18 +344,18 @@ class ExecutionDataProviderTest {
   @ParameterizedTest
   @EnumSource
   fun `all stage status values`(status: Status) {
-
     assumeTrue(status != Status.UNRECOGNIZED)
 
     val executionData = mapOf(
       "stages" to listOf(
-        mapOf("status" to status.toString())
-      )
+        mapOf("status" to status.toString()),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(1)
@@ -366,20 +366,20 @@ class ExecutionDataProviderTest {
   @ParameterizedTest
   @EnumSource
   fun `all cloud providers`(cloudProviderId: CloudProvider.ID) {
-
     assumeTrue(cloudProviderId != CloudProvider.ID.UNRECOGNIZED)
 
     val executionData = mapOf(
       "stages" to listOf(
         mapOf(
-          "context" to mapOf("cloudProvider" to cloudProviderId.toString())
-        )
-      )
+          "context" to mapOf("cloudProvider" to cloudProviderId.toString()),
+        ),
+      ),
     )
 
     val echoEvent = createEventWithExecutionData(executionData)
     val statsEvent = ExecutionDataProvider().populateData(
-      echoEvent, StatsEvent.getDefaultInstance()
+      echoEvent,
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(statsEvent.execution.stagesList).hasSize(1)

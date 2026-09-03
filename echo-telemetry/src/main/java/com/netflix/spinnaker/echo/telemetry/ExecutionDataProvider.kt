@@ -17,16 +17,16 @@
 
 package com.netflix.spinnaker.echo.telemetry
 
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.jackson.EchoObjectMapper
 import com.netflix.spinnaker.kork.proto.stats.CloudProvider
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import com.netflix.spinnaker.kork.proto.stats.Execution
 import com.netflix.spinnaker.kork.proto.stats.Stage
 import com.netflix.spinnaker.kork.proto.stats.Status
-import java.util.ArrayList
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.util.ArrayList
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 @Component
 @ConditionalOnProperty(value = ["stats.enabled"], matchIfMissing = true)
@@ -118,7 +118,7 @@ class ExecutionDataProvider : TelemetryEventDataProvider {
       val status: String = "UNKNOWN",
       val trigger: Trigger = Trigger(),
       val source: Source = Source(),
-      val stages: List<Stage> = listOf()
+      val stages: List<Stage> = listOf(),
     )
 
     data class Trigger(val type: String = "UNKNOWN")
@@ -129,7 +129,7 @@ class ExecutionDataProvider : TelemetryEventDataProvider {
       val status: String = "UNKNOWN",
       val type: String = "UNKNOWN",
       val syntheticStageOwner: String? = null,
-      val context: Context = Context()
+      val context: Context = Context(),
     ) {
 
       fun isSyntheticStage() = !syntheticStageOwner.isNullOrEmpty()

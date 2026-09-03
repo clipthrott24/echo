@@ -18,11 +18,9 @@
 package com.netflix.spinnaker.echo.telemetry
 
 import com.netflix.spinnaker.echo.api.events.Event
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.api.events.Metadata
 import com.netflix.spinnaker.echo.config.TelemetryConfig.TelemetryConfigProps
 import com.netflix.spinnaker.kork.proto.stats.DeploymentMethod
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,6 +30,8 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotBlank
 import strikt.assertions.isNotEqualTo
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 class SpinnakerInstanceDataProviderTest {
 
@@ -73,7 +73,6 @@ class SpinnakerInstanceDataProviderTest {
   @ParameterizedTest
   @EnumSource
   fun `all deployment methods are recognized`(type: DeploymentMethod.Type) {
-
     assumeTrue(type != DeploymentMethod.Type.UNRECOGNIZED)
 
     val echoEvent = createLoggableEvent()
@@ -90,7 +89,6 @@ class SpinnakerInstanceDataProviderTest {
 
   @Test
   fun `unknown deployment method`() {
-
     val echoEvent = createLoggableEvent()
     val statsEventInput = StatsEvent.getDefaultInstance()
     config.deploymentMethod.apply {
@@ -107,7 +105,6 @@ class SpinnakerInstanceDataProviderTest {
   // a test for it
   @Test
   fun `deployment method is NONE is version is unset`() {
-
     val echoEvent = createLoggableEvent()
     val statsEventInput = StatsEvent.getDefaultInstance()
     config.deploymentMethod.apply {

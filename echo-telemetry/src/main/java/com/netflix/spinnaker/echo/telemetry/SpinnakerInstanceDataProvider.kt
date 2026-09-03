@@ -17,20 +17,19 @@
 
 package com.netflix.spinnaker.echo.telemetry
 
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.config.TelemetryConfig.TelemetryConfigProps
 import com.netflix.spinnaker.kork.proto.stats.Application
 import com.netflix.spinnaker.kork.proto.stats.DeploymentMethod
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import com.netflix.spinnaker.kork.proto.stats.SpinnakerInstance
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 @Component
 @ConditionalOnProperty(value = ["stats.enabled"], matchIfMissing = true)
 class SpinnakerInstanceDataProvider(private val config: TelemetryConfigProps, private val instanceIdSupplier: InstanceIdSupplier) : TelemetryEventDataProvider {
   override fun populateData(echoEvent: EchoEvent, statsEvent: StatsEvent): StatsEvent {
-
     // TelemetryEventListener should ensure this is set
     val applicationId: String = echoEvent.details?.application
       ?: throw IllegalStateException("application not set")
@@ -68,6 +67,6 @@ class SpinnakerInstanceDataProvider(private val config: TelemetryConfigProps, pr
 
   private fun getProtoDeploymentType(type: String): DeploymentMethod.Type =
     DeploymentMethod.Type.valueOf(
-      DeploymentMethod.Type.getDescriptor().findMatchingValue(type)
+      DeploymentMethod.Type.getDescriptor().findMatchingValue(type),
     )
 }

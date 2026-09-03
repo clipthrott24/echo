@@ -14,14 +14,54 @@
  * limitations under the License.
  */
 
-plugins {
-  id 'io.spinnaker.project' version "$spinnakerGradleVersion" apply false
-  id "org.jetbrains.kotlin.jvm" version "$kotlinVersion" apply false
-  id 'com.adarshr.test-logger' version '2.1.0'
+buildscript {
+  repositories {
+    gradlePluginPortal()
+  }
+
+  dependencies {
+    classpath "io.spinnaker.gradle:spinnaker-project-plugin:$spinnakerGradleVersion"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+    classpath "com.adarshr:gradle-test-logger-plugin:4.0.0"
+  }
+
+  configurations.classpath {
+    resolutionStrategy {
+      // The ospackage plugin pulled in by io.spinnaker.project builds against
+      // Gradle internals that changed in Gradle 8.
+      force "com.netflix.nebula:gradle-ospackage-plugin:11.11.2"
+    }
+  }
 }
+
+apply plugin: 'com.adarshr.test-logger'
 
 allprojects {
   apply plugin: "io.spinnaker.project"
+
+  spinnakerCodeStyle {
+    enabled = false
+  }
+
+  apply plugin: "com.diffplug.spotless"
+
+  spotless {
+    java {
+      target "src/**/*.java"
+      googleJavaFormat("1.17.0")
+      removeUnusedImports()
+      trimTrailingWhitespace()
+      endWithNewline()
+    }
+  }
+
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    spotless {
+      kotlin {
+        ktlint("0.50.0")
+      }
+    }
+  }
 }
 
 subprojects {
@@ -39,7 +79,16 @@ subprojects {
     apply plugin: 'jacoco'
     apply plugin: 'com.adarshr.test-logger'
 
+    java {
+      sourceCompatibility = JavaVersion.VERSION_21
+      targetCompatibility = JavaVersion.VERSION_21
+      toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+      }
+    }
+
     test {
+      useJUnitPlatform()
       testLogging {
         exceptionFormat = 'full'
       }
@@ -54,10 +103,26 @@ subprojects {
 
   if (name != "echo-bom" && name != "echo-api") {
     jacoco {
-      toolVersion = '0.8.3'
+      toolVersion = '0.8.12'
     }
 
     dependencies {
+      constraints {
+        // kork-bom stopped managing okhttp 2.x, which the retrofit 1 clients
+        // still use.
+        implementation "com.squareup.okhttp:okhttp:2.7.5"
+        implementation "com.squareup.okhttp:okhttp-urlconnection:2.7.5"
+        implementation "com.squareup.okhttp:okhttp-apache:2.7.5"
+
+        // Boot 2.7's logback 1.2.x only implements the slf4j 1.7 binding, so
+        // slf4j 2.x pulled in by kork-bom silently falls back to a NOP logger.
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly "1.7.36"
+          }
+        }
+      }
+
       implementation platform("io.spinnaker.kork:kork-bom:$korkVersion")
       annotationProcessor platform("io.spinnaker.kork:kork-bom:$korkVersion")
       annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -66,7 +131,11 @@ subprojects {
       annotationProcessor "org.projectlombok:lombok"
       testAnnotationProcessor "org.projectlombok:lombok"
 
-      implementation "org.codehaus.groovy:groovy-all"
+      implementation "org.apache.groovy:groovy"
+      implementation "org.apache.groovy:groovy-json"
+      implementation "javax.validation:validation-api"
+      testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
+      testRuntimeOnly "org.junit.platform:junit-platform-launcher"
       implementation "com.github.ben-manes.caffeine:guava"
       implementation "com.netflix.spectator:spectator-api"
       implementation "org.slf4j:slf4j-api"

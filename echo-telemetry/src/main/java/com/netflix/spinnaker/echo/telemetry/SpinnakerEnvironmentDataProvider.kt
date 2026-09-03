@@ -17,14 +17,14 @@
 
 package com.netflix.spinnaker.echo.telemetry
 
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import com.netflix.spinnaker.kork.proto.stats.SpinnakerInstance
 import com.netflix.spinnaker.kork.proto.stats.SpinnakerInstance.DeployedArtifacts
 import com.netflix.spinnaker.kork.proto.stats.SpinnakerInstance.Environment
-import java.io.IOException
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
+import java.io.IOException
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 /**
  * Sets the [SpinnakerInstance.Environment] and [SpinnakerInstance.DeployedArtifacts] fields of the

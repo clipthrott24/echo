@@ -19,9 +19,7 @@ package com.netflix.spinnaker.echo.telemetry
 
 import com.google.protobuf.util.JsonFormat
 import com.netflix.spinnaker.echo.api.events.Event
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.api.events.Metadata
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import io.mockk.Called
 import io.mockk.CapturingSlot
@@ -30,7 +28,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.slot
 import io.mockk.verify
-import java.io.IOException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -41,6 +38,9 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isSuccess
 import strikt.assertions.isTrue
+import java.io.IOException
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 @ExtendWith(MockKExtension::class)
 class TelemetryEventListenerTest {

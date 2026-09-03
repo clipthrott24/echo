@@ -17,10 +17,8 @@
 
 package com.netflix.spinnaker.echo.telemetry
 
-import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
 import com.netflix.spinnaker.echo.api.events.Metadata
 import com.netflix.spinnaker.echo.services.Front50Service
-import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -31,6 +29,8 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isGreaterThanOrEqualTo
 import strikt.assertions.isLessThanOrEqualTo
+import com.netflix.spinnaker.echo.api.events.Event as EchoEvent
+import com.netflix.spinnaker.kork.proto.stats.Event as StatsEvent
 
 @ExtendWith(MockKExtension::class)
 class PipelineCountsDataProviderTest {
@@ -47,28 +47,27 @@ class PipelineCountsDataProviderTest {
 
   @Test
   fun `basic pipeline counts`() {
-
     every { front50Service.pipelines } returns listOf(
       mapOf(
-        "application" to "app1"
+        "application" to "app1",
       ),
       mapOf(
-        "application" to "app2"
+        "application" to "app2",
       ),
       mapOf(
-        "application" to "app2"
+        "application" to "app2",
       ),
       mapOf(
-        "application" to "app2"
+        "application" to "app2",
       ),
       mapOf(
-        "application" to "app3"
-      )
+        "application" to "app3",
+      ),
     )
 
     val result = dataProvider.populateData(
       echoEventForApplication("app2"),
-      StatsEvent.getDefaultInstance()
+      StatsEvent.getDefaultInstance(),
     )
 
     expectThat(result.spinnakerInstance.pipelineCount).isEqualTo(5)
@@ -77,25 +76,24 @@ class PipelineCountsDataProviderTest {
 
   @Test
   fun `pipeline without application is ignored`() {
-
     every { front50Service.pipelines } returns listOf(
       mapOf(
-        "application" to "app1"
+        "application" to "app1",
       ),
       mapOf(
-        "application" to "app2"
+        "application" to "app2",
       ),
       mapOf(
-        "application" to "app3"
+        "application" to "app3",
       ),
       mapOf(
-        "noApplicationIsDefined" to "thatsCoolMan"
-      )
+        "noApplicationIsDefined" to "thatsCoolMan",
+      ),
     )
 
     val result = dataProvider.populateData(
       echoEventForApplication("app2"),
-      StatsEvent.getDefaultInstance()
+      StatsEvent.getDefaultInstance(),
     )
 
     // I don't particularly care if it counts the broken pipeline or not.
