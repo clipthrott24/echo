@@ -29,7 +29,5 @@ dependencies {
 }
 
 test {
-  useJUnitPlatform {
-    includeEngines "junit-vintage", "junit-jupiter"
-  }
+  useJUnitPlatform()
 }
