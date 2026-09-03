@@ -199,8 +199,13 @@ Negative control that proves the bytecode level is real:
   ```
   This matters most across repeated verification runs, where a stale *diagnostic* copy
   (e.g. `/tmp/echo-diag`) may still be holding the port and serving `/health`, so you would be
-  probing the wrong process entirely. Verify the classpath in `ss -ltnp` output points at
-  `build/install/echo`, not `/tmp/echo-diag`.
+  probing the wrong process entirely. `ss -ltnp` only shows the process name (`java`) and PID,
+  not the classpath — take the PID it reports and inspect the actual command line to confirm
+  which build owns the port:
+  ```bash
+  pid=$(ss -ltnp | grep ':8089' | grep -oP 'pid=\K[0-9]+')
+  ps -o args= -p "$pid"          # look for build/install/echo, not /tmp/echo-diag
+  ```
 - To prove logging is live at runtime (not just at boot), snapshot the log line count after
   `Started Application`, hit `/health`, then re-check: new `DispatcherServlet` init lines and
   Retrofit `---> HTTP GET .../pipelines` / `<--- HTTP 200` poll lines should appear.
